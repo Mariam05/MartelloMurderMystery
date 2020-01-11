@@ -4,7 +4,8 @@ import datetime
 with open('Murder on the 2nd Floor/Murder-on-the-2nd-Floor-Raw-Data.json', 'r') as f:
     murd_dict = json.load(f)
 
-people = {}
+people_dict = dict()
+people_arr = []
 rooms = {'100': 'Front Lobby',
          '101': 'Reception Closet',
          '105': 'Dining Hall',
@@ -44,6 +45,8 @@ class Person:
     def get_last_room(self):
         return self.prev_room[-1]
 
+
+# noinspection DuplicatedCode
 class Room:
     def __init__(self, number):
         self.people = []
@@ -89,8 +92,9 @@ class Floor:
     def last_person_to_leave(self):
         return self.prev_people[-1]
 
+
 for key in murd_dict:
-    people[murd_dict[key]['guest-id']] = ''
+    people_dict[murd_dict[key]['guest-id']] = ''
 
 
 def convert_epoch_to_utc(epoch):
@@ -107,5 +111,15 @@ def event_dictionary(name):
     return event_dic
 
 
-for person in people:
-    people[person] = event_dictionary(person)
+def get_room_name(room_id):
+    if rooms.get(str(room_id)):
+        return rooms[room_id]
+    return room_id
+
+
+for person in people_dict:
+    people_dict[person] = event_dictionary(person)
+
+for person in people_dict:
+    people_arr.append(Person(person, get_room_name(people_dict[person][list(people_dict[person])[0]]['device-id'])))
+
