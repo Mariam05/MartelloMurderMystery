@@ -25,8 +25,7 @@ def event_dictionary(name):
 
 
 for person in people:
-    print(person + ":")
     people[person] = event_dictionary(person)
-    print(people[person])
-    print("\n")
+
+
 
