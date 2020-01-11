@@ -1,15 +1,13 @@
 import json
 import datetime
 
-def convertEpochtoUTC(epoch):
-    return datetime.datetime.utcfromtimestamp(epoch).strftime('%Y-%m-%d %H:%M:%S');
-
-import json
+people = {}
 
 with open('Murder on the 2nd Floor/Murder-on-the-2nd-Floor-Raw-Data.json', 'r') as f:
     murd_dict = json.load(f)
 
-people = {}
+def convertEpochtoUTC(epoch):
+    return datetime.datetime.utcfromtimestamp(epoch).strftime('%Y-%m-%d %H:%M:%S');
 
 def event_dictionary(name):
     event_dic = {}
