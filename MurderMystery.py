@@ -19,7 +19,7 @@ def event_dictionary(name):
     count = 0
     for event_key in murd_dict:
         if murd_dict[event_key]['guest-id'] == name:
-            event_dic[event_key] = murd_dict[event_key]
+            event_dic[convert_epoch_to_utc(int(event_key))] = murd_dict[event_key]
             count += 1
     return event_dic
 
@@ -29,3 +29,4 @@ for person in people:
     people[person] = event_dictionary(person)
     print(people[person])
     print("\n")
+
