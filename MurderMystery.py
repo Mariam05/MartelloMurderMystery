@@ -30,6 +30,65 @@ rooms = {'100': 'Front Lobby',
          '247': 'Junior Suite 3',
          '248': 'Junior Suite 4'}
 
+
+class Person:
+    def __init__(self, name, room):
+        self.current_room = room
+        self.prev_room = []
+        self.name = name
+
+    def update_room(self, room):
+        self.prev_room.append(self.current_room)
+        self.current_room = room
+
+    def get_last_room(self):
+        return self.prev_room[-1]
+
+class Room:
+    def __init__(self, number):
+        self.people = []
+        self.prev_people = []
+        self.number = number
+
+    def add_person(self, new_person):
+        self.people.append(new_person)
+
+    def remove_person(self, existing_person):
+        self.prev_people.append(existing_person)
+        self.people.remove(existing_person)
+
+    def get_people(self):
+        return self.people
+
+    def last_person_to_enter(self):
+        return self.people[-1]
+
+    def last_person_to_leave(self):
+        return self.prev_people[-1]
+
+
+class Floor:
+    def __init__(self, number):
+        self.number = number
+        self.people = []
+        self.prev_people = []
+
+    def add_person(self, new_person):
+        self.people.append(new_person)
+
+    def remove_person(self, existing_person):
+        self.prev_people.append(existing_person)
+        self.people.remove(existing_person)
+
+    def get_people(self):
+        return self.people
+
+    def last_person_to_enter(self):
+        return self.people[-1]
+
+    def last_person_to_leave(self):
+        return self.prev_people[-1]
+
 for key in murd_dict:
     people[murd_dict[key]['guest-id']] = ''
 
