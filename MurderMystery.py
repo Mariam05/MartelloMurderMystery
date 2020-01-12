@@ -6,14 +6,13 @@ from tkinter import Toplevel
 
 # from _overlapped import NULL
 
-with open('Murder on the 2nd Floor', 'r') as f:
+with open('Murder-on-the-2nd-Floor-Raw-Data.json', 'r') as f:
     murd_dict = json.load(f)
 
 people_dict = dict()
 people_arr = []
 room_arr = []
 wifi_arr = []
-interval_dict = {}
 murder_room = '210'
 
 rooms = {'100': 'Front Lobby',
@@ -56,10 +55,13 @@ class Person:
     def __init__(self, name, rooms):
         self.room_dict = rooms
         self.name = name
+        self.entered_murd_room = FALSE
+
+    def __str__(self):
+        return self.name
 
     def get_room_dic(self):
         return dict(self.room_dict)
-
 
     def get_room(self, time):
         returned_loc = ''
@@ -106,7 +108,7 @@ class Room:
             return self.state[time]
 
         for state_curr_time in self.state:
-            if int(state_curr_time) <= time:
+            if int(state_curr_time) <= int(time):
                 return_peo = self.state[state_curr_time]
 
         if return_peo.__len__() == 0:
@@ -114,12 +116,15 @@ class Room:
         return return_peo
 
     def time_interval(self, start_time, end_time):
+        interval_dict = {}
         return_interval_peo = 'No one enters or exits'
         for i in range(int(start_time), int(end_time)):
             if self.events.keys().__contains__(str(i)):
                 interval_dict[i] = self.events[str(i)]
+
         if interval_dict.__len__() == 0:
             interval_dict[0] = return_interval_peo
+        return interval_dict
 
 
 class WIFI:
@@ -159,12 +164,14 @@ class WIFI:
         return return_peo
 
     def time_interval(self, start_time, end_time):
+        interval_dict = {}
         return_interval_peo = 'No one connects or disconnects'
         for i in range(int(start_time), int(end_time)):
             if self.events.keys().__contains__(str(i)):
-                interval_dict[i] = self.events[str(i)]
+                interval_dict[i] = str(self.get_people(str(i))), self.events[str(i)]
         if interval_dict.__len__() == 0:
             interval_dict[0] = return_interval_peo
+        return interval_dict
 
 
 for key in murd_dict:
@@ -200,13 +207,14 @@ def get_everyone_loc(time):
 
 
 def check_time_interval(device_id, start_time, end_time):
+    interval_dict = {}
     interval_dict.clear()
     for wifi in wifi_arr:
         if wifi.number == device_id:
-            wifi.time_interval(start_time, end_time)
+            interval_dict.update(wifi.time_interval(start_time, end_time))
     for room in room_arr:
         if room.number == device_id:
-            room.time_interval(start_time, end_time)
+            interval_dict.update(room.time_interval(start_time, end_time))
     for _ in sorted(interval_dict):
         pass
     return interval_dict
@@ -232,24 +240,52 @@ for curr_time in murd_dict:
         if murd_dict[curr_time]['device-id'] == wifi.number:
             wifi.add_event(curr_time, murd_dict[curr_time]['event'], murd_dict[curr_time]['guest-id'])
 
+
 def who_is_dead():
     enters_murder_room = FALSE
     pos_victim = []
     for person in people_arr:
-        for time in person.room_dict:
-            if person.room_dict[time]['device-id'] == murder_room and person.room_dict[time]['event'] == 'successful keycard unlock':
-                enters_murder_room = TRUE
-            else:
-                if enters_murder_room and person.room_dict[time]['device-id'] != murder_room:
-                    enters_murder_room = FALSE
-        if enters_murder_room:
+        last_event = max(person.get_room_dic().keys())
+        if person.get_room_dic()[last_event]['event'] == 'successful keycard unlock' or person.get_room_dic()[last_event]['event'] == 'unlocked no keycard':
             pos_victim.append(person.name)
     return pos_victim
 
-check_time_interval('210', 1578188000, 1578399300)
+
+def who_did_it(pos_victim):
+    pos_sus = []
+    for person in people_arr:
+        if person.name == 'n/a':
+            break
+        if pos_victim.__contains__(person.name):  # find time interval for the murder
+            for time in person.room_dict:
+                if person.room_dict[time]['event'] == 'successful keycard unlock' and person.room_dict[time]['device-id'] == murder_room:
+                    start_time = time
+            end_time = max(person.get_room_dic().keys())
+        else:
+            for time in person.room_dict:  # find everyone who entered the murder room
+                if person.room_dict[time]['device-id'] == murder_room:
+                    person.entered_murd_room = TRUE
+
+            if person.entered_murd_room:
+                pos_sus.append(person)
+    for suspect in pos_sus:
+        for time in suspect.room_dict:
+            if time < end_time:
+                device = suspect.room_dict[time]['device-id']
+                if device != murder_room:
+                    pos_removal = TRUE
+                else:
+                    pos_removal = FALSE
+
+    return pos_sus
+
+
+check_time_interval('210', 1578180000, 1578399300)
 print(who_is_dead())
-print(people_arr[0].room_dict)
-#print(interval_dict)
+for sus in who_did_it(who_is_dead()):
+    print(str(sus), end=' ')
+# print(interval_dict)
+
 """""""""""
 """"GUI""""
 """""""""""
@@ -298,6 +334,27 @@ def setUpGUI2():
     menubar = Menu(root)
     personMenu = Menu(menubar)
     roomMenu = Menu(menubar)
+    
+       
+    def solveMystery():
+        top = tk.Toplevel(width = 100)
+        top.title("Who is dead?")
+        
+        deadppl = ""; 
+        
+        victims = who_is_dead()
+        for dead in victims:
+            deadppl = deadppl + " " + dead
+        
+        msg = Message(top, text=deadppl)
+        msg.pack()
+
+        button = Button(top, text="RIP", command=top.destroy)
+        button.pack()
+        
+    
+    b = Button(root, text = "Who is dead?", command = solveMystery)
+    b.pack()
 
     # Display information about the person selected. TODO: If they click on it again, remove it from filtered
     def personSelected(person):
@@ -319,13 +376,13 @@ def setUpGUI2():
             textBox.insert(tk.INSERT, p + " ")
 
         textBox.insert(tk.INSERT, "\n\n\n ")
-        textBox.insert(tk.INSERT, ("{:<25} {:<25} {:<20}".format('Time', 'Room', 'Person') + "\n"))
+        textBox.insert(tk.INSERT, ("{:<22} {:<12} {:<28} {:<20}".format('Time', 'Person', 'Event', 'Room') + "\n"))
 
         for element in filteredpeople_dict:
             for x, y in element.items():
                 textBox.insert(tk.INSERT,
-                               ("{:<25} {:<26}{:<20}".format(convert_epoch_to_utc(int(x)), rooms[y['device-id']],
-                                                             y['guest-id']) + "\n"))
+                               ("{:<22} {:<12}{:<28} {:<28}".format(convert_epoch_to_utc(int(x)), y['guest-id'],
+                                                                    y['event'], rooms[y['device-id']]) + "\n"))
 
         textBox.config(state="disabled")  # disable it so that it can't be changed again
 
