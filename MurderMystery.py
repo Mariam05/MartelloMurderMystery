@@ -57,6 +57,10 @@ class Person:
         self.room_dict = rooms
         self.name = name
 
+    def get_room_dic(self):
+        return dict(self.room_dict)
+
+
     def get_room(self, time):
         returned_loc = ''
 
@@ -229,10 +233,23 @@ for curr_time in murd_dict:
             wifi.add_event(curr_time, murd_dict[curr_time]['event'], murd_dict[curr_time]['guest-id'])
 
 def who_is_dead():
-    for room in room_arr:
-        pass
-check_time_interval('210', 1578188000, 1578188300)
-print(interval_dict)
+    enters_murder_room = FALSE
+    pos_victim = []
+    for person in people_arr:
+        for time in person.room_dict:
+            if person.room_dict[time]['device-id'] == murder_room and person.room_dict[time]['event'] == 'successful keycard unlock':
+                enters_murder_room = TRUE
+            else:
+                if enters_murder_room and person.room_dict[time]['device-id'] != murder_room:
+                    enters_murder_room = FALSE
+        if enters_murder_room:
+            pos_victim.append(person.name)
+    return pos_victim
+
+check_time_interval('210', 1578188000, 1578399300)
+print(who_is_dead())
+print(people_arr[0].room_dict)
+#print(interval_dict)
 """""""""""
 """"GUI""""
 """""""""""
