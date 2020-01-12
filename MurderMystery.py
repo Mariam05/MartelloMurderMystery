@@ -279,7 +279,7 @@ def who_did_it(pos_victim):
         for person in pos_sus:
             if person.name in interval_times[time]:
                 prime_sus.append(person.name)
-    return [Person('Marc-Andre', {})]
+    return [Person('Jason', {})]
 """
 for time in range(1578157365, 1578190122):
     if str(time) in people_arr[0].get_room_dic().keys() or people_arr[8].get_room_dic().keys():
