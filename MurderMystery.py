@@ -11,6 +11,7 @@ rooms = {'100': 'Front Lobby',
          '105': 'Dining Hall',
          '110': 'Conference Room',
          '130': 'Kitchen',
+         '150': 'First Floor Stairwell',
          '151': 'Gym',
          '152': 'Mens Washroom',
          '154': 'Womans Washroom',
@@ -29,21 +30,34 @@ rooms = {'100': 'Front Lobby',
          '241': 'Junior Suite 1',
          '244': 'Junior Suite 2',
          '247': 'Junior Suite 3',
-         '248': 'Junior Suite 4'}
+         '248': 'Junior Suite 4',
+         '250': 'Second Floor Stairwell',
+         'ap1-1': 'Conference Room',
+         'ap1-2': 'First Floor',
+         'ap1-3': 'First Floor',
+         'ap1-4': 'First Floor',
+         'ap2-1': 'Second Floor',
+         'ap2-2': 'Second Floor',
+         'ap2-3': 'Second Floor'}
 
 
 class Person:
-    def __init__(self, name, room):
-        self.current_room = room
-        self.prev_room = []
+    def __init__(self, name, rooms):
+        self.room_dict = rooms
         self.name = name
 
-    def update_room(self, room):
-        self.prev_room.append(self.current_room)
-        self.current_room = room
+    def get_room(self, time):
+        returned_loc = ''
 
-    def get_last_room(self):
-        return self.prev_room[-1]
+        if self.room_dict.get(time):
+            return get_room_name(self.room_dict[time]['device-id'])
+
+        for curr_time in self.room_dict:
+            curr_time = int(curr_time)
+            if curr_time <= time:
+                room_name = self.room_dict[str(curr_time)]['device-id']
+                returned_loc = get_room_name(room_name)
+        return returned_loc
 
 
 # noinspection DuplicatedCode
@@ -106,7 +120,7 @@ def event_dictionary(name):
     count = 0
     for event_key in murd_dict:
         if murd_dict[event_key]['guest-id'] == name:
-            event_dic[convert_epoch_to_utc(int(event_key))] = murd_dict[event_key]
+            event_dic[event_key] = murd_dict[event_key]
             count += 1
     return event_dic
 
@@ -117,9 +131,11 @@ def get_room_name(room_id):
     return room_id
 
 
-for person in people_dict:
+for person in people_dict:  # create dictionaries for ech person, containing their timeline
     people_dict[person] = event_dictionary(person)
 
-for person in people_dict:
-    people_arr.append(Person(person, get_room_name(people_dict[person][list(people_dict[person])[0]]['device-id'])))
+for person in people_dict:  # initialize array of Person objects with initial locations
+    people_arr.append(Person(person, people_dict[person]))
 
+print(event_dictionary("Veronica"))
+print(people_arr[0].get_room(1578153301))
