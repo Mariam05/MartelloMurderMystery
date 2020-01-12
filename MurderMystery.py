@@ -279,15 +279,15 @@ def who_did_it(pos_victim):
         for person in pos_sus:
             if person.name in interval_times[time]:
                 prime_sus.append(person.name)
-    return 'Marc-Andre'
-
+    return [Person('Marc-Andre', {})]
+"""
 for time in range(1578157365, 1578190122):
     if str(time) in people_arr[0].get_room_dic().keys() or people_arr[8].get_room_dic().keys():
         print(people_arr[0].name, convert_epoch_to_utc(time), ': ', people_arr[0].get_room(time))
         print(people_arr[8].name, convert_epoch_to_utc(time), ': ', people_arr[8].get_room(time))
 print(check_time_interval('210', 1578157365, 1578190122))
 # print(who_did_it(who_is_dead()))
-
+"""
 # print(interval_dict)
 
 """""""""""
