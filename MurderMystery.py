@@ -13,6 +13,8 @@ people_dict = dict()
 people_arr = []
 room_arr = []
 wifi_arr = []
+interval_dict = {}
+murder_room = '210'
 
 rooms = {'100': 'Front Lobby',
          '101': 'Reception Closet',
@@ -82,13 +84,16 @@ class Room:
         self.events[event_time] = room_person, action
 
         if action == 'successful keycard unlock':
-            self.people.append(room_person)
-            self.state[event_time] = self.people
+            if self.people.__contains__(room_person) == FALSE:
+                self.people.append(room_person)
+                peeps = self.people
+                self.state[event_time] = str(peeps)
 
         if action == 'unlocked no keycard':
             if self.people.__contains__(room_person):
                 self.people.remove(room_person)
-                self.state[event_time] = self.people
+                peeps = self.people
+                self.state[event_time] = str(peeps)
 
     def get_people(self, time):
         return_peo = 'None'
@@ -104,6 +109,14 @@ class Room:
             return_peo = 'Everyone left!'
         return return_peo
 
+    def time_interval(self, start_time, end_time):
+        return_interval_peo = 'No one enters or exits'
+        for i in range(int(start_time), int(end_time)):
+            if self.events.keys().__contains__(str(i)):
+                interval_dict[i] = self.events[str(i)]
+        if interval_dict.__len__() == 0:
+            interval_dict[0] = return_interval_peo
+
 
 class WIFI:
     def __init__(self, number):
@@ -115,14 +128,17 @@ class WIFI:
     def add_event(self, event_time, action, room_person):
         self.events[event_time] = room_person, action
 
-        if action == 'user connected':
-            self.people.append(room_person)
-            self.state[event_time] = self.people
-
-        if action == 'user disconnected':
-            if self.people.__contains__(room_person):
-                self.people.remove(room_person)
-                self.state[event_time] = self.people
+        if action == 'user connected' or action == 'new client':
+            if self.people.__contains__(room_person) == FALSE:
+                self.people.append(room_person)
+                peeps = self.people
+                self.state[event_time] = str(peeps)
+        else:
+            if action == 'user disconnected':
+                if self.people.__contains__(room_person):
+                    self.people.remove(room_person)
+                    peeps = self.people
+                    self.state[event_time] = str(peeps)
 
     def get_people(self, time):
         return_peo = 'None'
@@ -137,6 +153,15 @@ class WIFI:
         if return_peo.__len__() == 0:
             return_peo = 'Everyone disconnected!'
         return return_peo
+
+    def time_interval(self, start_time, end_time):
+        return_interval_peo = 'No one connects or disconnects'
+        for i in range(int(start_time), int(end_time)):
+            if self.events.keys().__contains__(str(i)):
+                interval_dict[i] = self.events[str(i)]
+        if interval_dict.__len__() == 0:
+            interval_dict[0] = return_interval_peo
+
 
 for key in murd_dict:
     people_dict[murd_dict[key]['guest-id']] = ''
@@ -170,6 +195,19 @@ def get_everyone_loc(time):
     return loc
 
 
+def check_time_interval(device_id, start_time, end_time):
+    interval_dict.clear()
+    for wifi in wifi_arr:
+        if wifi.number == device_id:
+            wifi.time_interval(start_time, end_time)
+    for room in room_arr:
+        if room.number == device_id:
+            room.time_interval(start_time, end_time)
+    for _ in sorted(interval_dict):
+        pass
+    return interval_dict
+
+
 for person in people_dict:  # create dictionaries for ech person, containing their timeline
     people_dict[person] = event_dictionary(person)
 
@@ -190,8 +228,11 @@ for curr_time in murd_dict:
         if murd_dict[curr_time]['device-id'] == wifi.number:
             wifi.add_event(curr_time, murd_dict[curr_time]['event'], murd_dict[curr_time]['guest-id'])
 
-print(wifi_arr[0].number + ": ")
-print(wifi_arr[0].get_people(1578212737))
+def who_is_dead():
+    for room in room_arr:
+        pass
+check_time_interval('210', 1578188000, 1578188300)
+print(interval_dict)
 """""""""""
 """"GUI""""
 """""""""""
@@ -200,8 +241,8 @@ print(wifi_arr[0].get_people(1578212737))
 def setUpGUI():
     r = tk.Tk()
     frame = tk.Frame(r)
-    frame.pack()
     r.title("Martello Murder Mystery")
+    frame.pack()
 
     def displayData(person):
         print(person)
@@ -266,7 +307,8 @@ def setUpGUI2():
         for element in filteredpeople_dict:
             for x, y in element.items():
                 textBox.insert(tk.INSERT,
-                               ("{:<25} {:<26}{:<20}".format(convert_epoch_to_utc(int(x)), rooms[y['device-id']], y['guest-id']) + "\n"))
+                               ("{:<25} {:<26}{:<20}".format(convert_epoch_to_utc(int(x)), rooms[y['device-id']],
+                                                             y['guest-id']) + "\n"))
 
         textBox.config(state="disabled")  # disable it so that it can't be changed again
 
