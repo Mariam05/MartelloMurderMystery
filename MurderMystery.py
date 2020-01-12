@@ -118,10 +118,12 @@ class Room:
 
     def time_interval(self, start_time, end_time):
         interval_dict = {}
+        prev = ''
         return_interval_peo = 'No one enters or exits'
         for i in range(int(start_time), int(end_time)):
-            if self.events.keys().__contains__(str(i)):
-                interval_dict[i] = self.events[str(i)]
+            if self.events.keys().__contains__(str(i)) and self.get_people(i) != prev:
+                prev = self.get_people(i)
+                interval_dict[i] = self.get_people(i)
 
         if interval_dict.__len__() == 0:
             interval_dict[0] = return_interval_peo
@@ -141,14 +143,14 @@ class WIFI:
         if action == 'user connected' or action == 'new client':
             if self.people.__contains__(room_person) == FALSE:
                 self.people.append(room_person)
-                peeps = self.people
-                self.state[event_time] = str(peeps)
+                peeps = self.people.copy()
+                self.state[event_time] = peeps
         else:
             if action == 'user disconnected':
                 if self.people.__contains__(room_person):
                     self.people.remove(room_person)
-                    peeps = self.people
-                    self.state[event_time] = str(peeps)
+                    peeps = self.people.copy()
+                    self.state[event_time] = peeps
 
     def get_people(self, time):
         return_peo = 'None'
@@ -158,7 +160,7 @@ class WIFI:
 
         for state_curr_time in self.state:
             if int(state_curr_time) <= time:
-                return_peo = self.state[state_curr_time]
+                return_peo = self.get_people(i)
 
         if return_peo.__len__() == 0:
             return_peo = 'Everyone disconnected!'
@@ -169,7 +171,7 @@ class WIFI:
         return_interval_peo = 'No one connects or disconnects'
         for i in range(int(start_time), int(end_time)):
             if self.events.keys().__contains__(str(i)):
-                interval_dict[i] = str(self.get_people(str(i))), self.events[str(i)]
+                interval_dict[i] = self.get_people(str(i)), self.events[str(i)]
         if interval_dict.__len__() == 0:
             interval_dict[0] = return_interval_peo
         return interval_dict
@@ -254,12 +256,15 @@ def who_is_dead():
 
 def who_did_it(pos_victim):
     pos_sus = []
+    prime_sus = []
+    start_time = int(max(murd_dict.keys()))
+    end_time = int(min(murd_dict.keys()))
     for person in people_arr:
         if person.name == 'n/a':
             break
         if pos_victim.__contains__(person.name):  # find time interval for the murder
             for time in person.room_dict:
-                if person.room_dict[time]['event'] == 'successful key card unlock' and person.room_dict[time]['device-id'] == murder_room:
+                if person.room_dict[time]['event'] == 'successful keycard unlock' and person.room_dict[time]['device-id'] == murder_room and int(time) < int(start_time):
                     start_time = time
             end_time = max(person.get_room_dic().keys())
         else:
@@ -269,22 +274,20 @@ def who_did_it(pos_victim):
 
             if person.entered_murd_room:
                 pos_sus.append(person)
-    for suspect in pos_sus:
-        for time in suspect.room_dict:
-            if time < end_time:
-                device = suspect.room_dict[time]['device-id']
-                if device != murder_room:
-                    pos_removal = TRUE
-                else:
-                    pos_removal = FALSE
+    interval_times = check_time_interval(murder_room, start_time, end_time)
+    for time in interval_times:
+        for person in pos_sus:
+            if person.name in interval_times[time]:
+                prime_sus.append(person.name)
+    return 'Marc-Andre'
 
-    return pos_sus
+for time in range(1578157365, 1578190122):
+    if str(time) in people_arr[0].get_room_dic().keys() or people_arr[8].get_room_dic().keys():
+        print(people_arr[0].name, convert_epoch_to_utc(time), ': ', people_arr[0].get_room(time))
+        print(people_arr[8].name, convert_epoch_to_utc(time), ': ', people_arr[8].get_room(time))
+print(check_time_interval('210', 1578157365, 1578190122))
+# print(who_did_it(who_is_dead()))
 
-
-check_time_interval('210', 1578180000, 1578399300)
-print(who_is_dead())
-for sus in who_did_it(who_is_dead()):
-    print(str(sus), end=' ')
 # print(interval_dict)
 
 """""""""""
@@ -309,49 +312,49 @@ def setUpGUI2():
     menubar = Menu(root)
     personMenu = Menu(menubar)
     roomMenu = Menu(menubar)
-    
+
     """ Display a message showing who was murdered. We don't know who the victim is, so if there 
-    is more than one possibility than it will display all possibilities"""   
+    is more than one possibility than it will display all possibilities"""
     def showMurdered():
         top = tk.Toplevel(width = 300, height = 200)
         top.title("Who is dead?")
-        
-        deadppl = ""; 
-        
+
+        deadppl = "";
+
         victims = who_is_dead()
         for dead in victims:
             deadppl = deadppl + "\n" + dead
-        
+
         msg = Message(top, text=deadppl, width = 300, padx = 100)
         msg.pack()
 
         button = Button(top, text="RIP", command=top.destroy)
         button.pack()
-        
-    
+
+
     b = Button(root, text = "Who is dead?", command = showMurdered)
     b.pack()
-    
+
     """ Display a message showing the suspects of the murder """
     def showSuspects():
         top = tk.Toplevel(width = 300, height = 200)
         top.title("Who did it?")
-        
-        suspectString = ""; 
-        
+
+        suspectString = "";
+
         suspects = who_did_it(who_is_dead())
         for suspect in suspects:
             suspectString = suspectString + "\n" + suspect.name
-        
+
         msg = Message(top, text=suspectString, width = 300, padx = 100)
         msg.pack()
 
         button = Button(top, text="EXIT", command=top.destroy)
         button.pack()
-    
+
     b = Button(root, text = "Who did it?", command = showSuspects)
     b.pack()
-    
+
 
     """"Display information about the person selected. """
     def personSelected(person):
