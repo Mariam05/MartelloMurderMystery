@@ -137,5 +137,4 @@ for person in people_dict:  # create dictionaries for ech person, containing the
 for person in people_dict:  # initialize array of Person objects with initial locations
     people_arr.append(Person(person, people_dict[person]))
 
-print(event_dictionary("Veronica"))
-print(people_arr[0].get_room(1578153301))
+
