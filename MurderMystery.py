@@ -244,12 +244,12 @@ def setUpGUI2():
             textBox.insert(tk.INSERT, p + " ")
 
         textBox.insert(tk.INSERT, "\n\n\n ")
-        textBox.insert(tk.INSERT, ("{:<15} {:<25} {:<20}".format('Time', 'Room', 'Person') + "\n"))
+        textBox.insert(tk.INSERT, ("{:<25} {:<25} {:<20}".format('Time', 'Room', 'Person') + "\n"))
 
         for element in filteredpeople_dict:
             for x, y in element.items():
                 textBox.insert(tk.INSERT,
-                               ("{:<15} {:<25}{:<20}".format(x, rooms[y['device-id']], y['guest-id']) + "\n"))
+                               ("{:<25} {:<26}{:<20}".format(convert_epoch_to_utc(int(x)), rooms[y['device-id']], y['guest-id']) + "\n"))
 
         textBox.config(state="disabled")  # disable it so that it can't be changed again
 
