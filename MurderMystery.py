@@ -310,7 +310,8 @@ def setUpGUI2():
     personMenu = Menu(menubar)
     roomMenu = Menu(menubar)
     
-       
+    """ Display a message showing who was murdered. We don't know who the victim is, so if there 
+    is more than one possibility than it will display all possibilities"""   
     def showMurdered():
         top = tk.Toplevel(width = 300, height = 200)
         top.title("Who is dead?")
@@ -319,7 +320,7 @@ def setUpGUI2():
         
         victims = who_is_dead()
         for dead in victims:
-            deadppl = deadppl + " " + dead
+            deadppl = deadppl + "\n" + dead
         
         msg = Message(top, text=deadppl, width = 300, padx = 100)
         msg.pack()
@@ -331,7 +332,7 @@ def setUpGUI2():
     b = Button(root, text = "Who is dead?", command = showMurdered)
     b.pack()
     
-    
+    """ Display a message showing the suspects of the murder """
     def showSuspects():
         top = tk.Toplevel(width = 300, height = 200)
         top.title("Who did it?")
@@ -352,17 +353,17 @@ def setUpGUI2():
     b.pack()
     
 
-    # Display information about the person selected. TODO: If they click on it again, remove it from filtered
+    """"Display information about the person selected. """
     def personSelected(person):
         if person in filteredPeople:
             filteredPeople.remove(person)
         else:
             filteredPeople.append(person)  # Add the person to the filtered ppl data
 
-        textBox.config(state="normal")  # Enable textbox editing so that we can write to it
-        textBox.delete(1.0, END)  # Clear the textbox
+        textBox.config(state="normal")  # Enable text box editing so that we can write to it
+        textBox.delete(1.0, END)  # Clear the text box
 
-        # This is a dictionary of all the enteries in murd_dict with that person in them
+        # This is a dictionary of all the entries in murd_dict with that person in them
         filteredpeople_dict = [{i: j for (i, j) in murd_dict.items() if (j['guest-id'] in filteredPeople)}]
 
         # Let the user know what they're filtering by
@@ -397,8 +398,4 @@ def setUpGUI2():
 
     root.mainloop()
 
-
-# print("Murder Dict: " , murd_dict)
-# for time, info in murd_dict.items():
-#     print (info['guest-id'])
 setUpGUI2()
