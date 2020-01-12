@@ -246,8 +246,7 @@ def who_is_dead():
     pos_victim = []
     for person in people_arr:
         last_event = max(person.get_room_dic().keys())
-        if person.get_room_dic()[last_event]['event'] == 'successful keycard unlock' or \
-                person.get_room_dic()[last_event]['event'] == 'unlocked no keycard':
+        if person.get_room_dic()[last_event]['event'] == 'successful keycard unlock' or person.get_room_dic()[last_event]['event'] == 'unlocked no keycard':
             pos_victim.append(person.name)
     return pos_victim
 
@@ -282,7 +281,7 @@ def who_did_it(pos_victim):
 
 
 check_time_interval('210', 1578180000, 1578399300)
-
+print(who_is_dead())
 for sus in who_did_it(who_is_dead()):
     print(str(sus), end=' ')
 # print(interval_dict)
