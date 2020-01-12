@@ -284,7 +284,7 @@ def who_did_it(pos_victim):
 
 
 check_time_interval('210', 1578180000, 1578399300)
-print(who_is_dead())
+
 for sus in who_did_it(who_is_dead()):
     print(str(sus), end=' ')
 # print(interval_dict)
