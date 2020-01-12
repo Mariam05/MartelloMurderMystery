@@ -1,11 +1,10 @@
-import json
 import datetime
+import json
 import tkinter as tk
 from tkinter import *
 from tkinter import Toplevel
-from faulthandler import disable
+
 # from _overlapped import NULL
-from http import client
 
 with open('Murder on the 2nd Floor/Murder-on-the-2nd-Floor-Raw-Data.json', 'r') as f:
     murd_dict = json.load(f)
@@ -13,6 +12,8 @@ with open('Murder on the 2nd Floor/Murder-on-the-2nd-Floor-Raw-Data.json', 'r') 
 people_dict = dict()
 people_arr = []
 room_arr = []
+wifi_arr = []
+
 rooms = {'100': 'Front Lobby',
          '101': 'Reception Closet',
          '105': 'Dining Hall',
@@ -105,28 +106,37 @@ class Room:
 
 
 class WIFI:
-
     def __init__(self, number):
         self.number = number
         self.people = []
-        self.prev_people = []
+        self.events = {}
+        self.state = {}
 
-    def add_person(self, new_person):
-        self.people.append(new_person)
+    def add_event(self, event_time, action, room_person):
+        self.events[event_time] = room_person, action
 
-    def remove_person(self, existing_person):
-        self.prev_people.append(existing_person)
-        self.people.remove(existing_person)
+        if action == 'user connected':
+            self.people.append(room_person)
+            self.state[event_time] = self.people
 
-    def get_people(self):
-        return self.people
+        if action == 'user disconnected':
+            if self.people.__contains__(room_person):
+                self.people.remove(room_person)
+                self.state[event_time] = self.people
 
-    def last_person_to_enter(self):
-        return self.people[-1]
+    def get_people(self, time):
+        return_peo = 'None'
 
-    def last_person_to_leave(self):
-        return self.prev_people[-1]
+        if self.state.get(time):
+            return self.state[time]
 
+        for state_curr_time in self.state:
+            if int(state_curr_time) <= time:
+                return_peo = self.state[state_curr_time]
+
+        if return_peo.__len__() == 0:
+            return_peo = 'Everyone disconnected!'
+        return return_peo
 
 for key in murd_dict:
     people_dict[murd_dict[key]['guest-id']] = ''
@@ -169,12 +179,19 @@ for person in people_dict:  # initialize array of Person objects with initial lo
 for room in rooms:
     if room[0] == '1' or room[0] == '2':
         room_arr.append(Room(room))
+    if room[0:2] == 'ap':
+        wifi_arr.append(WIFI(room))
 
 for curr_time in murd_dict:
     for room in room_arr:
         if murd_dict[curr_time]['device-id'] == room.number:
             room.add_event(curr_time, murd_dict[curr_time]['event'], murd_dict[curr_time]['guest-id'])
+    for wifi in wifi_arr:
+        if murd_dict[curr_time]['device-id'] == wifi.number:
+            wifi.add_event(curr_time, murd_dict[curr_time]['event'], murd_dict[curr_time]['guest-id'])
 
+print(wifi_arr[0].number + ": ")
+print(wifi_arr[0].get_people(1578212737))
 """""""""""
 """"GUI""""
 """""""""""
@@ -188,13 +205,13 @@ def setUpGUI():
 
     def displayData(person):
         print(person)
-        top = Toplevel();
+        top = Toplevel()
         top.title(person + "'s events")
         msg = Message(top, text=people_dict[person])
         msg.pack()
         button = Button(top, text="Dismiss", command=top.destroy)
         button.pack()
-        print(people_dict[person]);
+        print(people_dict[person])
 
     for x in people_dict:
         button = tk.Button(frame, text=x, width=50, command=lambda x=x: displayData(x))
