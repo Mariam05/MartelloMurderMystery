@@ -12,6 +12,7 @@ with open('Murder on the 2nd Floor/Murder-on-the-2nd-Floor-Raw-Data.json', 'r') 
 
 people_dict = dict()
 people_arr = []
+room_arr = []
 rooms = {'100': 'Front Lobby',
          '101': 'Reception Closet',
          '105': 'Dining Hall',
@@ -59,10 +60,10 @@ class Person:
         if self.room_dict.get(time):
             return get_room_name(self.room_dict[time]['device-id'])
 
-        for curr_time in self.room_dict:
-            curr_time = int(curr_time)
-            if curr_time <= time:
-                room_name = self.room_dict[str(curr_time)]['device-id']
+        for person_curr_time in self.room_dict:
+            person_curr_time = int(person_curr_time)
+            if person_curr_time <= time:
+                room_name = self.room_dict[str(person_curr_time)]['device-id']
                 returned_loc = get_room_name(room_name)
         return returned_loc
 
@@ -76,18 +77,17 @@ class Room:
         self.events = {}
         self.state = {}
 
-    def add_event(self, event_time, action, person):
-        self.events[event_time] = person, action
+    def add_event(self, event_time, action, room_person):
+        self.events[event_time] = room_person, action
 
         if action == 'successful keycard unlock':
-            self.people.append(person)
+            self.people.append(room_person)
             self.state[event_time] = self.people
 
         if action == 'unlocked no keycard':
-            if self.people.__contains__(person):
-                self.people.remove(person)
+            if self.people.__contains__(room_person):
+                self.people.remove(room_person)
                 self.state[event_time] = self.people
-
 
     def get_people(self, time):
         return_peo = 'None'
@@ -95,9 +95,9 @@ class Room:
         if self.state.get(time):
             return self.state[time]
 
-        for curr_time in self.state:
-            if int(curr_time) <= time:
-                return_peo = self.state[curr_time]
+        for state_curr_time in self.state:
+            if int(state_curr_time) <= time:
+                return_peo = self.state[state_curr_time]
 
         if return_peo.__len__() == 0:
             return_peo = 'Everyone left!'
@@ -108,8 +108,8 @@ class WIFI:
 
     def __init__(self, number):
         self.number = number
-        self.people = {}
-        self.prev_people = {}
+        self.people = []
+        self.prev_people = []
 
     def add_person(self, new_person):
         self.people.append(new_person)
@@ -154,8 +154,8 @@ def get_room_name(room_id):
 
 def get_everyone_loc(time):
     loc = {}
-    for person in people_arr:
-        loc[person.name] = person.get_room(time)
+    for person_loc in people_arr:
+        loc[person_loc.name] = person_loc.get_room(time)
 
     return loc
 
@@ -165,6 +165,19 @@ for person in people_dict:  # create dictionaries for ech person, containing the
 
 for person in people_dict:  # initialize array of Person objects with initial locations
     people_arr.append(Person(person, people_dict[person]))
+
+for room in rooms:
+    if room[0] == '1' or room[0] == '2':
+        room_arr.append(Room(room))
+
+for curr_time in murd_dict:
+    for room in room_arr:
+        if murd_dict[curr_time]['device-id'] == room.number:
+            room.add_event(curr_time, murd_dict[curr_time]['event'], murd_dict[curr_time]['guest-id'])
+
+"""""""""""
+""""GUI""""
+"""""""""""
 
 
 def setUpGUI():
@@ -181,10 +194,10 @@ def setUpGUI():
         msg.pack()
         button = Button(top, text="Dismiss", command=top.destroy)
         button.pack()
-        print(people_dict[person])
-        
+        print(people_dict[person]);
+
     for x in people_dict:
-        button = tk.Button(frame, text=x, width=50, command=lambda x=x: displayData(x))    
+        button = tk.Button(frame, text=x, width=50, command=lambda x=x: displayData(x))
         button.pack()
 
     r.mainloop()
@@ -194,19 +207,19 @@ def setUpGUI():
 Second format where there's a menu bar that the user can use to filter .. 
 I still haven't made it so that the data is displayed when one is clicked though. 
 """
+
+
 def setUpGUI2():
     root = tk.Tk()
 
-    filteredPerson = ""
-
     filteredPeople = []
     filteredRoom = ""
-    
+
     textBox = tk.Text(root, height=50, width=100)
     textBox.pack()
-    
+
     textBox.config(state="disabled")  # Don't allow the user to edit the textbox
-    
+
     menubar = Menu(root)
     personMenu = Menu(menubar)
     roomMenu = Menu(menubar)
@@ -218,12 +231,11 @@ def setUpGUI2():
         else:
             filteredPeople.append(person)  # Add the person to the filtered ppl data
 
+        textBox.config(state="normal")  # Enable textbox editing so that we can write to it
+        textBox.delete(1.0, END)  # Clear the textbox
 
-        textBox.config(state="normal") # Enable textbox editing so that we can write to it
-        textBox.delete(1.0, END) # Clear the textbox
-
-        #This is a dictionary of all the enteries in murd_dict with that person in them
-        filteredpeople_dict = [{i:j for (i,j) in murd_dict.items() if (j['guest-id'] in filteredPeople)}]
+        # This is a dictionary of all the enteries in murd_dict with that person in them
+        filteredpeople_dict = [{i: j for (i, j) in murd_dict.items() if (j['guest-id'] in filteredPeople)}]
 
         # Let the user know what they're filtering by
         textBox.insert(tk.INSERT, "FILTERED BY: \n")
@@ -232,15 +244,12 @@ def setUpGUI2():
             textBox.insert(tk.INSERT, p + " ")
 
         textBox.insert(tk.INSERT, "\n\n\n ")
-        textBox.insert(tk.INSERT, ("{:<15} {:<25} {:<20}".format('Time','Room','Person')+"\n"))
-
+        textBox.insert(tk.INSERT, ("{:<15} {:<25} {:<20}".format('Time', 'Room', 'Person') + "\n"))
 
         for element in filteredpeople_dict:
             for x, y in element.items():
-                textBox.insert(tk.INSERT, ("{:<15} {:<25}{:<20}".format(x, rooms[y['device-id']], y['guest-id'])+"\n"))
-
-
-
+                textBox.insert(tk.INSERT,
+                               ("{:<15} {:<25}{:<20}".format(x, rooms[y['device-id']], y['guest-id']) + "\n"))
 
         textBox.config(state="disabled")  # disable it so that it can't be changed again
 
@@ -256,7 +265,7 @@ def setUpGUI2():
 
     # display the menu
     root.config(menu=menubar)
-        
+
     root.mainloop()
 
 
@@ -264,4 +273,3 @@ def setUpGUI2():
 # for time, info in murd_dict.items():
 #     print (info['guest-id'])
 setUpGUI2()
-
