@@ -158,6 +158,67 @@ for person in people_dict:  # create dictionaries for ech person, containing the
 for person in people_dict:  # initialize array of Person objects with initial locations
     people_arr.append(Person(person, people_dict[person]))
 
+def setUpGUI():
+    r = tk.Tk()
+    frame = tk.Frame(r)
+    frame.pack()
+    r.title("Martello Murder Mystery")
+
+    def displayData(person):
+        print(person)
+        top = Toplevel();
+        top.title(person + "'s events")
+        msg = Message(top, text=people[person])
+        msg.pack()
+        button = Button(top, text="Dismiss", command=top.destroy)
+        button.pack()
+        print(people[person]);
+
+    for x in people:
+        button = tk.Button(frame, text=x, width=50, command=lambda x=x: displayData(x))
+        button.pack()
+
+    r.mainloop()
+
+
+"""
+Second format where there's a menu bar that the user can use to filter .. 
+I still haven't made it so that the data is displayed when one is clicked though. 
+"""
+def setUpGUI2():
+    root = tk.Tk()
+
+    filteredPerson = ""
+    filteredRoom = ""
+
+    textBox = tk.Text(root, height=50, width=100)
+    textBox.pack()
+
+    textBox.config(state="disabled")
+
+    menubar = Menu(root)
+    personMenu = Menu(menubar)
+
+    def personSelected(person):
+        filteredPerson = person
+        textBox.config(state="normal")
+        textBox.delete(1.0, END)
+        textBox.insert(tk.INSERT, "FILTERED BY: " + filteredPerson + "\n")
+        textBox.insert(tk.INSERT, person + "\n")
+        textBox.config(state="disabled")
+
+    for person in people:
+        personMenu.add_command(label=person, command=lambda person=person: personSelected(person))
+
+    menubar.add_cascade(label="People", menu=personMenu)
+
+    # display the menu
+    root.config(menu=menubar)
+
+    root.mainloop()
+
+
+setUpGUI2();
 for room in rooms:
     if room[0] == '1' or room[0] == '2':
         room_arr.append(Room(room))
@@ -166,6 +227,3 @@ for curr_time in murd_dict:
     for room in room_arr:
         if murd_dict[curr_time]['device-id'] == room.number:
             room.add_event(curr_time, murd_dict[curr_time]['event'], murd_dict[curr_time]['guest-id'])
-
-
-print(room_arr[4].get_people(1578212737))
