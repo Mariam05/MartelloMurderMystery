@@ -3,6 +3,7 @@ import json
 import tkinter as tk
 from tkinter import *
 from tkinter import Toplevel
+from cProfile import label
 
 # from _overlapped import NULL
 
@@ -258,7 +259,7 @@ def who_did_it(pos_victim):
             break
         if pos_victim.__contains__(person.name):  # find time interval for the murder
             for time in person.room_dict:
-                if person.room_dict[time]['event'] == 'successful keycard unlock' and person.room_dict[time]['device-id'] == murder_room:
+                if person.room_dict[time]['event'] == 'successful key card unlock' and person.room_dict[time]['device-id'] == murder_room:
                     start_time = time
             end_time = max(person.get_room_dic().keys())
         else:
@@ -289,39 +290,13 @@ for sus in who_did_it(who_is_dead()):
 """""""""""
 """"GUI""""
 """""""""""
-
-
-def setUpGUI():
-    r = tk.Tk()
-    frame = tk.Frame(r)
-    r.title("Martello Murder Mystery")
-    frame.pack()
-
-    def displayData(person):
-        print(person)
-        top = Toplevel()
-        top.title(person + "'s events")
-        msg = Message(top, text=people_dict[person])
-        msg.pack()
-        button = Button(top, text="Dismiss", command=top.destroy)
-        button.pack()
-        print(people_dict[person])
-
-    for x in people_dict:
-        button = tk.Button(frame, text=x, width=50, command=lambda x=x: displayData(x))
-        button.pack()
-
-    r.mainloop()
-
-
 """
-Second format where there's a menu bar that the user can use to filter .. 
+Format where there's a menu bar that the user can use to filter .. 
 I still haven't made it so that the data is displayed when one is clicked though. 
 """
-
-
 def setUpGUI2():
     root = tk.Tk()
+    root.title("Murder Mystery")
 
     filteredPeople = []
     filteredRoom = ""
@@ -336,8 +311,8 @@ def setUpGUI2():
     roomMenu = Menu(menubar)
     
        
-    def solveMystery():
-        top = tk.Toplevel(width = 100)
+    def showMurdered():
+        top = tk.Toplevel(width = 300, height = 200)
         top.title("Who is dead?")
         
         deadppl = ""; 
@@ -346,15 +321,36 @@ def setUpGUI2():
         for dead in victims:
             deadppl = deadppl + " " + dead
         
-        msg = Message(top, text=deadppl)
+        msg = Message(top, text=deadppl, width = 300, padx = 100)
         msg.pack()
 
         button = Button(top, text="RIP", command=top.destroy)
         button.pack()
         
     
-    b = Button(root, text = "Who is dead?", command = solveMystery)
+    b = Button(root, text = "Who is dead?", command = showMurdered)
     b.pack()
+    
+    
+    def showSuspects():
+        top = tk.Toplevel(width = 300, height = 200)
+        top.title("Who did it?")
+        
+        suspectString = ""; 
+        
+        suspects = who_did_it(who_is_dead())
+        for suspect in suspects:
+            suspectString = suspectString + "\n" + suspect.name
+        
+        msg = Message(top, text=suspectString, width = 300, padx = 100)
+        msg.pack()
+
+        button = Button(top, text="EXIT", command=top.destroy)
+        button.pack()
+    
+    b = Button(root, text = "Who did it?", command = showSuspects)
+    b.pack()
+    
 
     # Display information about the person selected. TODO: If they click on it again, remove it from filtered
     def personSelected(person):
