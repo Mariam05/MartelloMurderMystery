@@ -6,7 +6,7 @@ from tkinter import Toplevel
 
 # from _overlapped import NULL
 
-with open('/Users/ryan/PycharmProjects/MurderMysteryGit/Murder on the 2nd Floor/Murder-on-the-2nd-Floor-Raw-Data-v01.json', 'r') as f:
+with open('Murder on the 2nd Floor', 'r') as f:
     murd_dict = json.load(f)
 
 people_dict = dict()
