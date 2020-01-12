@@ -6,6 +6,7 @@ with open('Murder on the 2nd Floor/Murder-on-the-2nd-Floor-Raw-Data.json', 'r') 
 
 people_dict = dict()
 people_arr = []
+room_arr = []
 rooms = {'100': 'Front Lobby',
          '101': 'Reception Closet',
          '105': 'Dining Hall',
@@ -32,13 +33,13 @@ rooms = {'100': 'Front Lobby',
          '247': 'Junior Suite 3',
          '248': 'Junior Suite 4',
          '250': 'Second Floor Stairwell',
-         'ap1-1': 'Conference Room',
-         'ap1-2': 'First Floor',
-         'ap1-3': 'First Floor',
-         'ap1-4': 'First Floor',
-         'ap2-1': 'Second Floor',
-         'ap2-2': 'Second Floor',
-         'ap2-3': 'Second Floor'}
+         'ap1-1': 'WIFI - Conference Room',
+         'ap1-2': 'WIFI - AP1-2',
+         'ap1-3': 'WIFI - AP1-3',
+         'ap1-4': 'WIFI - AP1-4',
+         'ap2-1': 'WIFI - AP2-1 (Murder)',
+         'ap2-2': 'WIFI - AP2-2',
+         'ap2-3': 'WIFI - AP2-3'}
 
 
 class Person:
@@ -64,31 +65,43 @@ class Person:
 class Room:
     def __init__(self, number):
         self.people = []
-        self.prev_people = []
         self.number = number
+        self.events = {}
+        self.state = {}
 
-    def add_person(self, new_person):
-        self.people.append(new_person)
+    def add_event(self, event_time, action, person):
+        self.events[event_time] = person, action
 
-    def remove_person(self, existing_person):
-        self.prev_people.append(existing_person)
-        self.people.remove(existing_person)
+        if action == 'successful keycard unlock':
+            self.people.append(person)
+            self.state[event_time] = self.people
 
-    def get_people(self):
-        return self.people
-
-    def last_person_to_enter(self):
-        return self.people[-1]
-
-    def last_person_to_leave(self):
-        return self.prev_people[-1]
+        if action == 'unlocked no keycard':
+            if self.people.__contains__(person):
+                self.people.remove(person)
+                self.state[event_time] = self.people
 
 
-class Floor:
+    def get_people(self, time):
+        return_peo = 'None'
+
+        if self.state.get(time):
+            return self.state[time]
+
+        for curr_time in self.state:
+            if int(curr_time) <= time:
+                return_peo = self.state[curr_time]
+
+        if return_peo.__len__() == 0:
+            return_peo = 'Everyone left!'
+        return return_peo
+
+
+class WIFI:
     def __init__(self, number):
         self.number = number
-        self.people = []
-        self.prev_people = []
+        self.people = {}
+        self.prev_people = {}
 
     def add_person(self, new_person):
         self.people.append(new_person)
@@ -131,10 +144,28 @@ def get_room_name(room_id):
     return room_id
 
 
+def get_everyone_loc(time):
+    loc = {}
+    for person in people_arr:
+        loc[person.name] = person.get_room(time)
+
+    return loc
+
+
 for person in people_dict:  # create dictionaries for ech person, containing their timeline
     people_dict[person] = event_dictionary(person)
 
 for person in people_dict:  # initialize array of Person objects with initial locations
     people_arr.append(Person(person, people_dict[person]))
 
+for room in rooms:
+    if room[0] == '1' or room[0] == '2':
+        room_arr.append(Room(room))
 
+for curr_time in murd_dict:
+    for room in room_arr:
+        if murd_dict[curr_time]['device-id'] == room.number:
+            room.add_event(curr_time, murd_dict[curr_time]['event'], murd_dict[curr_time]['guest-id'])
+
+
+print(room_arr[4].get_people(1578212737))
