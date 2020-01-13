@@ -27,7 +27,7 @@ rooms = {'100': 'Front Lobby',
          '154': 'Womans Washroom',
          '155': 'Pool',
          '156': 'Laundry Room',
-         '156B': 'Stroage Room',
+         '156b': 'Stroage Room',
          '200': 'Hall',
          '210': 'Executive Suite (Murder)',
          '220': 'Executive Suite',
@@ -48,7 +48,12 @@ rooms = {'100': 'Front Lobby',
          'ap1-4': 'WIFI - AP1-4',
          'ap2-1': 'WIFI - AP2-1 (Murder)',
          'ap2-2': 'WIFI - AP2-2',
-         'ap2-3': 'WIFI - AP2-3'}
+         'ap2-3': 'WIFI - AP2-3',
+         'elevator': 'Motion - Elevator',
+         'stairwell': 'Motion - Stariwell',
+         'reception': 'Phone - Reception',
+         'ice machine': 'Motion - Ice Machine',
+         'lobby': 'Phone - Lobby'}
 
 
 class Person:
@@ -160,7 +165,7 @@ class WIFI:
 
         for state_curr_time in self.state:
             if int(state_curr_time) <= time:
-                return_peo = self.get_people(i)
+                return_peo = self.get_people(state_curr_time)
 
         if return_peo.__len__() == 0:
             return_peo = 'Everyone disconnected!'
